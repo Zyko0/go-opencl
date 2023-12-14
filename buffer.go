@@ -2,8 +2,15 @@ package opencl
 
 import (
 	"errors"
+	"strconv"
 	"unsafe"
 )
+
+type BufferData struct {
+	TypeSize uintptr
+	DataSize uintptr
+	Pointer  unsafe.Pointer
+}
 
 type MemFlag uint32
 
@@ -30,17 +37,10 @@ const (
 )
 
 func (b Buffer) getInfo(name memInfo) (uint, error) {
-	/*size := clSize(0)
-	st := getPlatformInfo(p, name, clSize(0), nil, &size)
-	if st != CL_SUCCESS {
-		return "", errors.New("oops at 1st get platform info")
-	}*/
-
 	info := uint(0)
-	ptr := &info
-	st := getMemObjectInfo(b, name, clSize(unsafe.Sizeof(ptr)), ptr, nil)
+	st := getMemObjectInfo(b, name, clSize(unsafe.Sizeof(info)), unsafe.Pointer(&info), nil)
 	if st != CL_SUCCESS {
-		return 0, errors.New("oops at 2nd get platform info")
+		return 0, errors.New("oops at get buffer info: " + strconv.FormatInt(int64(st), 10))
 	}
 
 	return info, nil
@@ -57,4 +57,30 @@ func (b Buffer) Release() error {
 	}
 
 	return nil
+}
+
+// GL
+
+func (b Buffer) GetGLObjectInfo() (CLGLObjectType, error) {
+	var objectType CLGLObjectType
+
+	st := getGLObjectInfo(b, &objectType, nil)
+	if st != CL_SUCCESS {
+		return 0, errors.New("oops at get gl object info")
+	}
+
+	return objectType, nil
+}
+
+func (b Buffer) GetGLTextureInfo(info CLGLTextureInfo) (uint32, error) {
+	var results = []uint32{0}
+
+	st := getGLTextureInfo(
+		b, info, clSize(unsafe.Sizeof(&results[0])), unsafe.Pointer(&results[0]), nil,
+	)
+	if st != CL_SUCCESS {
+		return 0, errors.New("oops at get gl texture info")
+	}
+
+	return results[0], nil
 }

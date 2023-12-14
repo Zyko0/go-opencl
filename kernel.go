@@ -2,17 +2,28 @@ package opencl
 
 import (
 	"errors"
+	"strconv"
 	"unsafe"
 )
 
 type Kernel uint
 
-func (k Kernel) SetArg(index uint, arg *Buffer) error {
-	// TODO: Support different types than *Buffer
-	ptr := unsafe.Pointer(arg)
-	st := setKernelArg(k, index, clSize(unsafe.Sizeof(ptr)), ptr)
+type KernelArg struct {
+	ptr  unsafe.Pointer
+	size clSize
+}
+
+func NewKernelArg[T any](arg *T) KernelArg {
+	return KernelArg{
+		ptr:  unsafe.Pointer(arg),
+		size: clSize(unsafe.Sizeof(*arg)),
+	}
+}
+
+func (k Kernel) SetArg(index uint, arg KernelArg) error {
+	st := setKernelArg(k, index, arg.size, arg.ptr)
 	if st != CL_SUCCESS {
-		return errors.New("oops at set kernel arg")
+		return errors.New("oops at set kernel arg: " + strconv.FormatInt(int64(st), 10))
 	}
 
 	return nil

@@ -1,7 +1,5 @@
 package opencl
 
-import "errors"
-
 type DeviceType uint32
 
 const (
@@ -26,14 +24,3 @@ const (
 )
 
 type Device uint
-
-func (d Device) CreateContext() (Context, error) {
-	var st clStatus
-
-	ctx := createContext(nil, 1, []Device{d}, nil, nil, &st)
-	if st != CL_SUCCESS {
-		return 0, errors.New("oops at create context")
-	}
-
-	return ctx, nil
-}

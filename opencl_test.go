@@ -36,19 +36,25 @@ func Test_Compute(m *testing.T) {
 	}
 	fmt.Println("platforms", len(platforms))
 
-	info, err := platforms[0].GetName()
+	name, err := platforms[0].GetName()
 	if err != nil {
 		log.Fatal("err:", err)
 	}
-	fmt.Println("info:", info)
+	fmt.Println("name:", name)
+	
+	version, err := platforms[0].GetVersion()
+	if err != nil {
+		log.Fatal("err:", err)
+	}
+	fmt.Println("version:", version)
 
 	devices, err := platforms[0].GetDevices(opencl.DeviceTypeAll)
 	if err != nil {
 		log.Fatal("err:", err)
 	}
-	fmt.Println("devices:", devices)
+	fmt.Println("devices:", len(devices))
 
-	ctx, err := devices[0].CreateContext()
+	ctx, err := devices[0].CreateContext(nil)
 	if err != nil {
 		log.Fatal("err:", err)
 	}
@@ -69,10 +75,11 @@ func Test_Compute(m *testing.T) {
 	defer program.Release()
 	fmt.Println("program:", program)
 
-	err = program.Build(devices[0])
+	logs, err := program.Build(devices[0], nil)
 	if err != nil {
 		log.Fatal("err:", err)
 	}
+	fmt.Println("logs:", logs)
 
 	kernel, err := program.CreateKernel("kern")
 	if err != nil {
@@ -81,7 +88,16 @@ func Test_Compute(m *testing.T) {
 	defer kernel.Release()
 	fmt.Println("kernel:", kernel)
 
-	buffer, err := ctx.CreateBuffer([]opencl.MemFlag{opencl.MemFlagsWriteOnly}, dataSize*4)
+	data := make([]float32, dataSize)
+	bufferData := opencl.GetBufferData(data)
+	fmt.Println("buffer data:", bufferData.DataSize, bufferData.Pointer)
+	buffer, err := ctx.CreateBuffer(
+		[]opencl.MemFlag{
+			opencl.MemFlagsWriteOnly,
+			opencl.MemFlagsAllocHostPtr,
+		},
+		uint(bufferData.DataSize),
+	)
 	if err != nil {
 		log.Fatal("err:", err)
 	}
@@ -94,12 +110,12 @@ func Test_Compute(m *testing.T) {
 	}
 	fmt.Println("buffer size:", size)
 
-	err = kernel.SetArg(0, &buffer)
+	err = kernel.SetArg(0, opencl.NewKernelArg(&buffer))
 	if err != nil {
 		log.Fatal("err:", err)
 	}
 
-	err = queue.EnqueueNDRangeKernel(kernel, 1, []uint64{dataSize})
+	err = queue.EnqueueNDRangeKernel(kernel, 1, nil, []uint64{dataSize}, nil)
 	if err != nil {
 		log.Fatal("err:", err)
 	}
@@ -107,8 +123,7 @@ func Test_Compute(m *testing.T) {
 	queue.Flush()
 	queue.Finish()
 
-	data := make([]float32, dataSize)
-	err = queue.EnqueueReadBuffer(buffer, true, data)
+	err = queue.EnqueueReadBuffer(buffer, true, opencl.GetBufferData(data))
 	if err != nil {
 		log.Fatal("err:", err)
 	}
