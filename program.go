@@ -50,7 +50,7 @@ func (po *ProgramBuildOptions) String() string {
 
 	// Preprocessor
 	if po.Warnings {
-		sb.WriteString("w")
+		sb.WriteString("-w")
 		sb.WriteRune(' ')
 	}
 	if po.CLVersion != "" {
