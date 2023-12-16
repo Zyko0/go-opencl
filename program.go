@@ -16,14 +16,14 @@ const (
 	programBuildLog     programBuildInfo = 0x1183
 )
 
-type CLVersion string
+type Version string
 
 const (
-	CLVersion1_0 CLVersion = "CL1.0"
-	CLVersion1_1 CLVersion = "CL1.1"
-	CLVersion1_2 CLVersion = "CL1.2"
-	CLVersion2_0 CLVersion = "CL2.0"
-	CLVersion3_0 CLVersion = "CL3.0"
+	Version1_0 Version = "CL1.0"
+	Version1_1 Version = "CL1.1"
+	Version1_2 Version = "CL1.2"
+	Version2_0 Version = "CL2.0"
+	Version3_0 Version = "CL3.0"
 )
 
 type ProgramBuildOptions struct {
@@ -31,7 +31,7 @@ type ProgramBuildOptions struct {
 	Warnings          bool
 	Macros            map[string]string
 	DirectoryIncludes []string
-	CLVersion         CLVersion
+	Version           Version
 	// Math intrinsics options
 	SinglePrecisionConstant bool
 	MadEnable               bool
@@ -53,8 +53,8 @@ func (po *ProgramBuildOptions) String() string {
 		sb.WriteString("-w")
 		sb.WriteRune(' ')
 	}
-	if po.CLVersion != "" {
-		sb.WriteString("-cl-std=" + string(po.CLVersion))
+	if po.Version != "" {
+		sb.WriteString("-cl-std=" + string(po.Version))
 		sb.WriteRune(' ')
 	}
 	// Math intrinsics

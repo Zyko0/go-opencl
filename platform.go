@@ -2,6 +2,7 @@ package opencl
 
 import (
 	"errors"
+	"strings"
 )
 
 type Platform uint
@@ -25,11 +26,11 @@ func GetPlatforms() ([]Platform, error) {
 type platformInfo uint
 
 const (
-	PlatformInfoProfile    platformInfo = 0x0900
-	PlatformInfoVersion    platformInfo = 0x0901
-	PlatformInfoName       platformInfo = 0x0902
-	PlatformInfoVendor     platformInfo = 0x0903
-	PlatformInfoExtensions platformInfo = 0x0904
+	platformInfoProfile    platformInfo = 0x0900
+	platformInfoVersion    platformInfo = 0x0901
+	platformInfoName       platformInfo = 0x0902
+	platformInfoVendor     platformInfo = 0x0903
+	platformInfoExtensions platformInfo = 0x0904
 )
 
 func (p Platform) getInfo(name platformInfo) (string, error) {
@@ -49,23 +50,27 @@ func (p Platform) getInfo(name platformInfo) (string, error) {
 }
 
 func (p Platform) GetProfile() (string, error) {
-	return p.getInfo(PlatformInfoProfile)
+	return p.getInfo(platformInfoProfile)
 }
 
 func (p Platform) GetVersion() (string, error) {
-	return p.getInfo(PlatformInfoVersion)
+	return p.getInfo(platformInfoVersion)
 }
 
 func (p Platform) GetName() (string, error) {
-	return p.getInfo(PlatformInfoName)
+	return p.getInfo(platformInfoName)
 }
 
 func (p Platform) GetVendor() (string, error) {
-	return p.getInfo(PlatformInfoVendor)
+	return p.getInfo(platformInfoVendor)
 }
 
-func (p Platform) GetExtensions() (string, error) {
-	return p.getInfo(PlatformInfoExtensions)
+func (p Platform) GetExtensions() ([]Extension, error) {
+	extensions, err := p.getInfo(platformInfoExtensions)
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(extensions, " "), nil
 }
 
 func (p Platform) GetDevices(deviceType DeviceType) ([]Device, error) {

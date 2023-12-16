@@ -41,18 +41,30 @@ func Test_Compute(m *testing.T) {
 		log.Fatal("err:", err)
 	}
 	fmt.Println("name:", name)
-	
+
 	version, err := platforms[0].GetVersion()
 	if err != nil {
 		log.Fatal("err:", err)
 	}
 	fmt.Println("version:", version)
 
+	platformExtensions, err := platforms[0].GetExtensions()
+	if err != nil {
+		log.Fatal("err:", err)
+	}
+	fmt.Println("platform extensions:", platformExtensions)
+
 	devices, err := platforms[0].GetDevices(opencl.DeviceTypeAll)
 	if err != nil {
 		log.Fatal("err:", err)
 	}
 	fmt.Println("devices:", len(devices))
+
+	deviceExtensions, err := devices[0].GetExtensions()
+	if err != nil {
+		log.Fatal("err:", err)
+	}
+	fmt.Println("device extensions:", deviceExtensions)
 
 	ctx, err := devices[0].CreateContext(nil)
 	if err != nil {

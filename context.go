@@ -6,29 +6,61 @@ import (
 	"unsafe"
 )
 
-type ContextProperty uint
+type contextProperty uint
 
-const (
-	ContextPropertyPlatform        ContextProperty = 0x1084
-	ContextPropertyInteropUserSync ContextProperty = 0x1085 // >= 1.2
-	// GL
-	ContextPropertyGLContextKHR ContextProperty = 0x2008
-	ContextPropertyWGL_HDC_KHR  ContextProperty = 0x200B
-)
+type ContextProperties struct {
+	Platform *Platform
+	// Interop
+	InteropUserSync *bool
+	// OpenGL
+	GLContextKHR *uint
+	// Windows
+	WGL_HDC_KHR *uint
+}
+
+func (cp *ContextProperties) compile() []contextProperty {
+	if cp == nil {
+		return []contextProperty{0}
+	}
+
+	const (
+		ContextPropertyPlatform        contextProperty = 0x1084
+		ContextPropertyInteropUserSync contextProperty = 0x1085 // >= 1.2
+		// GL
+		ContextPropertyGLContextKHR contextProperty = 0x2008
+		ContextPropertyWGL_HDC_KHR  contextProperty = 0x200B
+	)
+
+	var properties []contextProperty
+	if cp.Platform != nil {
+		properties = append(properties, ContextPropertyPlatform, contextProperty(*cp.Platform))
+	}
+	if cp.InteropUserSync != nil {
+		b := contextProperty(0)
+		if *cp.InteropUserSync {
+			b = 1
+		}
+		properties = append(properties, ContextPropertyInteropUserSync, b)
+	}
+	if cp.GLContextKHR != nil {
+		properties = append(properties, ContextPropertyGLContextKHR, contextProperty(*cp.GLContextKHR))
+	}
+	if cp.WGL_HDC_KHR != nil {
+		properties = append(properties, ContextPropertyWGL_HDC_KHR, contextProperty(*cp.WGL_HDC_KHR))
+	}
+	// End of list should be marked as an extra zero
+	return append(properties, 0)
+}
 
 type Context uint
 
 // TODO: make properties into a struct instead of weird map<uint32>
 
-func (d Device) CreateContext(properties map[ContextProperty]ContextProperty) (Context, error) {
+func (d Device) CreateContext(properties *ContextProperties) (Context, error) {
 	var st clStatus
 
-	flatten := make([]ContextProperty, 0, len(properties)*2)
-	for k, v := range properties {
-		flatten = append(flatten, k, ContextProperty(v))
-	}
-	flatten = append(flatten, 0) // End of list
-	ctx := createContext(unsafe.Pointer(&flatten[0]), 1, []Device{d}, nil, nil, &st)
+	flattened := properties.compile()
+	ctx := createContext(unsafe.Pointer(&flattened[0]), 1, []Device{d}, nil, nil, &st)
 	if st != CL_SUCCESS {
 		return 0, errors.New("oops at create context: " + strconv.FormatInt(int64(st), 10))
 	}

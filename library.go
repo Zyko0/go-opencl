@@ -22,7 +22,7 @@ var (
 	getPlatformInfo func(platform Platform, platformInfo platformInfo, paramValueSize clSize, paramValue []byte, paramValueSizeRet *clSize) clStatus
 	// Device
 	getDeviceIDs  func(platform Platform, deviceType DeviceType, numEntries uint32, devices []Device, numDevices *uint32) clStatus
-	getDeviceInfo func(device Device, deviceInfo DeviceInfo, paramValueSize clSize, paramValue []byte, paramValueSizeRet *uint32) clStatus
+	getDeviceInfo func(device Device, deviceInfo deviceInfo, paramValueSize clSize, paramValue []byte, paramValueSizeRet *clSize) clStatus
 	// Context
 	createContext           func(properties unsafe.Pointer, numDevices uint32, devices []Device, pfnNotify *createContextNotifyFunc, userData []byte, errCodeRet *clStatus) Context
 	releaseContext          func(ctx Context) clStatus
@@ -40,8 +40,6 @@ var (
 	enqueueMapBuffer                 func(queue CommandQueue, buffer Buffer, blockingMap bool, mapFlags MapFlag, offset, size clSize, numEventsWaitList uint, eventWaitList []Event, event *Event, errCodeRet *clStatus) uintptr
 	enqueueUnmapMemObject            func(queue CommandQueue, buffer Buffer, mappedPtr unsafe.Pointer, numEventsWaitList uint, eventWaitList []Event, event *Event) clStatus
 	enqueueMapImage                  func(queue CommandQueue, image Buffer, blockingMap bool, mapFlags MapFlag, origin, region [3]clSize, imageRowPitch, imageSlicePitch *clSize, numEventsWaitList uint, eventWaitList []Event, event *Event, errCodeRet *clStatus) uintptr
-	enqueueAcquireGLObjects          func(queue CommandQueue, numObjects uint32, memObjects unsafe.Pointer, numEventsInWaitList uint32, eventWaitList []Event, event *Event) clStatus
-	enqueueReleaseGLObjects          func(queue CommandQueue, numObjects uint32, memObjects unsafe.Pointer, numEventsInWaitList uint32, eventWaitList []Event, event *Event) clStatus
 	finishCommandQueue               func(queue CommandQueue) clStatus
 	flushCommandQueue                func(queue CommandQueue) clStatus
 	releaseCommandQueue              func(queue CommandQueue) clStatus
@@ -56,10 +54,6 @@ var (
 	// Buffer
 	getMemObjectInfo func(buffer Buffer, memInfo memInfo, paramValueSize clSize, paramValue unsafe.Pointer, paramValueSizeRet *clSize) clStatus
 	releaseMemObject func(buffer Buffer) clStatus
-	// GL
-	createFromGLTexture func(ctx Context, memFlags MemFlag, textureTarget GLEnum, mipLevel GLInt, texture GLUint, errCodeRet *clStatus) Buffer
-	getGLObjectInfo     func(memObj Buffer, objectType *CLGLObjectType, objectName *GLUint) clStatus
-	getGLTextureInfo    func(memObj Buffer, paramName CLGLTextureInfo, paramValueSize clSize, paramValue unsafe.Pointer, paramValueSizeRet *clSize) clStatus
 )
 
 func Initialize() error {
@@ -105,6 +99,24 @@ func Initialize() error {
 	// Buffer
 	purego.RegisterLibFunc(&getMemObjectInfo, handle, "clGetMemObjectInfo")
 	purego.RegisterLibFunc(&releaseMemObject, handle, "clReleaseMemObject")
+
+	return nil
+}
+
+var (
+	// GL
+	createFromGLTexture     func(ctx Context, memFlags MemFlag, textureTarget GLEnum, mipLevel GLInt, texture GLUint, errCodeRet *clStatus) Buffer
+	getGLObjectInfo         func(memObj Buffer, objectType *CLGLObjectType, objectName *GLUint) clStatus
+	getGLTextureInfo        func(memObj Buffer, paramName CLGLTextureInfo, paramValueSize clSize, paramValue unsafe.Pointer, paramValueSizeRet *clSize) clStatus
+	enqueueAcquireGLObjects func(queue CommandQueue, numObjects uint32, memObjects unsafe.Pointer, numEventsInWaitList uint32, eventWaitList []Event, event *Event) clStatus
+	enqueueReleaseGLObjects func(queue CommandQueue, numObjects uint32, memObjects unsafe.Pointer, numEventsInWaitList uint32, eventWaitList []Event, event *Event) clStatus
+)
+
+func InitializeGLSharing() error {
+	handle, err := loadLibrary()
+	if err != nil {
+		return err
+	}
 	// GL
 	purego.RegisterLibFunc(&createFromGLTexture, handle, "clCreateFromGLTexture")
 	purego.RegisterLibFunc(&enqueueAcquireGLObjects, handle, "clEnqueueAcquireGLObjects")
