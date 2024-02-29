@@ -1,7 +1,6 @@
 package opencl
 
 import (
-	"errors"
 	"strings"
 )
 
@@ -36,16 +35,11 @@ func (d Device) getInfo(name deviceInfo) (string, error) {
 	size := clSize(0)
 	st := getDeviceInfo(d, name, clSize(0), nil, &size)
 	if st != CL_SUCCESS {
-		return "", errors.New("oops at 1st get device info")
+		return "", st.getError()
 	}
-
 	info := make([]byte, size)
 	st = getDeviceInfo(d, name, size, info, nil)
-	if st != CL_SUCCESS {
-		return "", errors.New("oops at 2nd get device info")
-	}
-
-	return string(info), nil
+	return string(info), st.getError()
 }
 
 func (d Device) GetExtensions() ([]Extension, error) {

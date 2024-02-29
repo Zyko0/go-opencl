@@ -1,8 +1,6 @@
 package opencl
 
 import (
-	"errors"
-	"strconv"
 	"unsafe"
 )
 
@@ -61,22 +59,13 @@ func (d Device) CreateContext(properties *ContextProperties) (Context, error) {
 
 	flattened := properties.compile()
 	ctx := createContext(unsafe.Pointer(&flattened[0]), 1, []Device{d}, nil, nil, &st)
-	if st != CL_SUCCESS {
-		return 0, errors.New("oops at create context: " + strconv.FormatInt(int64(st), 10))
-	}
-
-	return ctx, nil
+	return ctx, st.getError()
 }
 
 func (c Context) CreateCommandQueue(device Device) (CommandQueue, error) {
 	var st clStatus
-
 	queue := createCommandQueue(c, device, 0, &st)
-	if st != CL_SUCCESS {
-		return 0, errors.New("oops at create command queue")
-	}
-
-	return queue, nil
+	return queue, st.getError()
 }
 
 type CommandQueueProperty uint32
@@ -96,20 +85,11 @@ func (c Context) CreateCommandQueueWithProperties(device Device, properties []Co
 		property |= p
 	}
 	queue := createCommandQueueWithProperties(c, device, property, &st)
-	if st != CL_SUCCESS {
-		return 0, errors.New("oops at create command queue")
-	}
-
-	return queue, nil
+	return queue, st.getError()
 }
 
 func (c Context) Release() error {
-	st := releaseContext(c)
-	if st != CL_SUCCESS {
-		return errors.New("oops at release context")
-	}
-
-	return nil
+	return releaseContext(c).getError()
 }
 
 func (c Context) CreateProgram(source string) (Program, error) {
@@ -118,11 +98,7 @@ func (c Context) CreateProgram(source string) (Program, error) {
 	program := createProgramWithSource(
 		c, 1, []string{source}, []clSize{clSize(len(source))}, &st,
 	)
-	if st != CL_SUCCESS {
-		return 0, errors.New("oops at create program with source")
-	}
-
-	return program, nil
+	return program, st.getError()
 }
 
 func (c Context) CreateBuffer(flags []MemFlag, size uint) (Buffer, error) {
@@ -133,11 +109,7 @@ func (c Context) CreateBuffer(flags []MemFlag, size uint) (Buffer, error) {
 		memFlags |= f
 	}
 	buffer := createBuffer(c, memFlags, clSize(size), nil, &st)
-	if st != CL_SUCCESS {
-		return 0, errors.New("oops at create buffer: " + strconv.FormatInt(int64(st), 10))
-	}
-
-	return buffer, nil
+	return buffer, st.getError()
 }
 
 func (c Context) CreateImage2D(flags []MemFlag, format ImageFormat, width, height int) (Buffer, error) {
@@ -149,11 +121,7 @@ func (c Context) CreateImage2D(flags []MemFlag, format ImageFormat, width, heigh
 	}
 	w, h := clSize(width), clSize(height)
 	buffer := createImage2D(c, memFlags, &format, w, h, 0, nil, &st)
-	if st != CL_SUCCESS {
-		return 0, errors.New("oops at create image 2D: " + strconv.FormatInt(int64(st), 10))
-	}
-
-	return buffer, nil
+	return buffer, st.getError()
 }
 
 // GL
@@ -166,9 +134,5 @@ func (c Context) CreateFromGLTexture(flags []MemFlag, target GLEnum, texture GLU
 		memFlags |= f
 	}
 	buffer := createFromGLTexture(c, memFlags, target, 0, texture, &st)
-	if st != CL_SUCCESS {
-		return 0, errors.New("oops at create from gl texture: " + strconv.FormatInt(int64(st), 10))
-	}
-
-	return buffer, nil
+	return buffer, st.getError()
 }

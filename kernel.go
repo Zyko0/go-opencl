@@ -1,8 +1,6 @@
 package opencl
 
 import (
-	"errors"
-	"strconv"
 	"unsafe"
 )
 
@@ -21,19 +19,9 @@ func NewKernelArg[T any](arg *T) KernelArg {
 }
 
 func (k Kernel) SetArg(index uint, arg KernelArg) error {
-	st := setKernelArg(k, index, arg.size, arg.ptr)
-	if st != CL_SUCCESS {
-		return errors.New("oops at set kernel arg: " + strconv.FormatInt(int64(st), 10))
-	}
-
-	return nil
+	return setKernelArg(k, index, arg.size, arg.ptr).getError()
 }
 
 func (k Kernel) Release() error {
-	st := releaseKernel(k)
-	if st != CL_SUCCESS {
-		return errors.New("oops at release kernel")
-	}
-
-	return nil
+	return releaseKernel(k).getError()
 }
