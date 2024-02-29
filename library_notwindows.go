@@ -4,6 +4,7 @@ package opencl
 
 import (
 	"errors"
+	"github.com/ebitengine/purego"
 	"runtime"
 )
 
