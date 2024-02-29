@@ -52,4 +52,3 @@ func loadLibrary() (uintptr, error) {
 	}
 	return 0, errors.New("no path has passed")
 }
-}
