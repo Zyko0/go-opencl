@@ -44,10 +44,6 @@ func loadLibrary() (uintptr, error) {
 	if len(paths) == 0 {
 		return 0, errors.New("unknown system paths")
 	}
-	return getLib(paths)
-}
-
-func getLib(paths []string) (uintptr, error) {
 	for i := 0; i < len(paths); i++ {
 		libOpenCl, err := purego.Dlopen(paths[i], purego.RTLD_NOW|purego.RTLD_GLOBAL)
 		if err == nil {
@@ -55,4 +51,5 @@ func getLib(paths []string) (uintptr, error) {
 		}
 	}
 	return 0, errors.New("no path has passed")
+}
 }
