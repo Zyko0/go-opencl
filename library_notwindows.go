@@ -1,4 +1,4 @@
-//go:build darwin || freebsd || linux || android
+//go:build !windows
 
 package opencl
 
@@ -8,14 +8,8 @@ import (
 	"runtime"
 )
 
-import (
-	"errors"
-	"github.com/ebitengine/purego"
-	"runtime"
-)
-
-func getOpenCLPath() ([]string, error) { // these conditions will compiler solve at compile time and function will probably inline
-	if runtime.GOOS == "linux" || runtime.GOOS == "freebsd" {   
+func getOpenCLPath() ([]string, error) {
+	if runtime.GOOS == "linux" || runtime.GOOS == "freebsd" { // these conditions will compiler solve at compile time and function will probably inline
 		return []string{
 			"/usr/lib/libOpenCL.so",
 			"/usr/local/lib/libOpenCL.so",
