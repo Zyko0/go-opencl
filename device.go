@@ -19,8 +19,6 @@ type Device uint
 
 type deviceInfo uint32
 
-type Devices []Device
-
 const (
 	deviceInfoType              deviceInfo = 0x1000
 	deviceInfoAddressBits       deviceInfo = 0x100D
@@ -52,6 +50,6 @@ func (d Device) GetExtensions() ([]Extension, error) {
 	return strings.Split(extensions, " "), nil
 }
 
-func (d Devices) Release() error {
+func (d Device) Release() error {
 	return releaseDevice(d).getError()
 }
