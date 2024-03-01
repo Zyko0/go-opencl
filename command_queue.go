@@ -1,8 +1,6 @@
 package opencl
 
 import (
-	"errors"
-	"strconv"
 	"unsafe"
 )
 
@@ -11,12 +9,7 @@ type commandQueueProperties uint32
 type CommandQueue uint
 
 func (cq CommandQueue) EnqueueBarrier() error {
-	st := enqueueBarrier(cq)
-	if st != CL_SUCCESS {
-		return errors.New("oops at enqueue barrier")
-	}
-
-	return nil
+	return enqueueBarrier(cq).getError()
 }
 
 func (cq CommandQueue) EnqueueNDRangeKernel(kernel Kernel, workDim uint, globalOffsets, globalWorkSizes, localWorkSizes []uint64) error {
@@ -39,49 +32,29 @@ func (cq CommandQueue) EnqueueNDRangeKernel(kernel Kernel, workDim uint, globalO
 			lsizes[i] = clSize(localWorkSizes[i])
 		}
 	}
-	st := enqueueNDRangeKernel(
+	return enqueueNDRangeKernel(
 		cq, kernel, workDim, offsets, gsizes, lsizes, 0, nil, nil,
-	)
-	if st != CL_SUCCESS {
-		return errors.New("oops at enqueue nd range kernel: " + strconv.FormatInt(int64(st), 10))
-	}
-
-	return nil
+	).getError()
 }
 
 func (cq CommandQueue) EnqueueReadBuffer(buffer Buffer, blockingRead bool, data *BufferData) error {
-	st := enqueueReadBuffer(
+	return enqueueReadBuffer(
 		cq, buffer, blockingRead, 0, clSize(data.DataSize), data.Pointer, 0, nil, nil,
-	)
-	if st != CL_SUCCESS {
-		return errors.New("oops at enqueue read buffer: " + strconv.FormatInt(int64(st), 10))
-	}
-
-	return nil
+	).getError()
 }
 
 func (cq CommandQueue) EnqueueReadImage(image Buffer, blockingRead bool, data *ImageData) error {
 	origin := [3]clSize{clSize(data.Origin[0]), clSize(data.Origin[1]), clSize(data.Origin[2])}
 	region := [3]clSize{clSize(data.Region[0]), clSize(data.Region[1]), clSize(data.Region[2])}
-	st := enqueueReadImage(
+	return enqueueReadImage(
 		cq, image, blockingRead, origin, region, 0, 0, data.Pointer, 0, nil, nil,
-	)
-	if st != CL_SUCCESS {
-		return errors.New("oops at enqueue read image: " + strconv.FormatInt(int64(st), 10))
-	}
-
-	return nil
+	).getError()
 }
 
 func (cq CommandQueue) EnqueueWriteBuffer(buffer Buffer, blockingWrite bool, data *BufferData) error {
-	st := enqueueReadBuffer(
+	return enqueueReadBuffer(
 		cq, buffer, blockingWrite, 0, clSize(data.DataSize), data.Pointer, 0, nil, nil,
-	)
-	if st != CL_SUCCESS {
-		return errors.New("oops at enqueue nd range kernel")
-	}
-
-	return nil
+	).getError()
 }
 
 type MapFlag uint32
@@ -103,7 +76,7 @@ func (cq CommandQueue) EnqueueMapBuffer(buffer Buffer, blockingMap bool, flags [
 		cq, buffer, blockingMap, mapFlags, 0, clSize(data.DataSize), 0, nil, nil, &st,
 	)
 	if st != CL_SUCCESS {
-		return errors.New("oops at enqueue map buffer: " + strconv.FormatInt(int64(st), 10))
+		return st.getError()
 	}
 	data.Pointer = unsafe.Pointer(ptr)
 
@@ -124,7 +97,7 @@ func (cq CommandQueue) EnqueueMapImage(image Buffer, blockingMap bool, flags []M
 		cq, image, blockingMap, mapFlags, origin, region, rowpitch, slicepitch, 0, nil, nil, &st,
 	)
 	if st != CL_SUCCESS {
-		return errors.New("oops at enqueue map image: " + strconv.FormatInt(int64(st), 10))
+		return st.getError()
 	}
 	data.Pointer = unsafe.Pointer(ptr)
 
@@ -132,63 +105,33 @@ func (cq CommandQueue) EnqueueMapImage(image Buffer, blockingMap bool, flags []M
 }
 
 func (cq CommandQueue) EnqueueUnmapBuffer(buffer Buffer, data *BufferData) error {
-	st := enqueueUnmapMemObject(
+	return enqueueUnmapMemObject(
 		cq, buffer, data.Pointer, 0, nil, nil,
-	)
-	if st != CL_SUCCESS {
-		return errors.New("oops at enqueue unmap buffer: " + strconv.FormatInt(int64(st), 10))
-	}
-
-	return nil
+	).getError()
 }
 
 func (cq CommandQueue) Finish() error {
-	st := finishCommandQueue(cq)
-	if st != CL_SUCCESS {
-		return errors.New("oops at finish command queue")
-	}
-
-	return nil
+	return finishCommandQueue(cq).getError()
 }
 
 func (cq CommandQueue) Flush() error {
-	st := flushCommandQueue(cq)
-	if st != CL_SUCCESS {
-		return errors.New("oops at flush command queue")
-	}
-
-	return nil
+	return flushCommandQueue(cq).getError()
 }
 
 func (cq CommandQueue) Release() error {
-	st := releaseCommandQueue(cq)
-	if st != CL_SUCCESS {
-		return errors.New("oops at release command queue")
-	}
-
-	return nil
+	return releaseCommandQueue(cq).getError()
 }
 
 // GL
 
 func (cq CommandQueue) EnqueueAcquireGLObjects(objects []Buffer) error {
-	st := enqueueAcquireGLObjects(
+	return enqueueAcquireGLObjects(
 		cq, uint32(len(objects)), unsafe.Pointer(&objects[0]), 0, nil, nil,
-	)
-	if st != CL_SUCCESS {
-		return errors.New("oops at enqueue acquire GL objects: " + strconv.FormatInt(int64(st), 10))
-	}
-
-	return nil
+	).getError()
 }
 
 func (cq CommandQueue) EnqueueReleaseGLObjects(objects []Buffer) error {
-	st := enqueueReleaseGLObjects(
+	return enqueueReleaseGLObjects(
 		cq, uint32(len(objects)), unsafe.Pointer(&objects[0]), 0, nil, nil,
-	)
-	if st != CL_SUCCESS {
-		return errors.New("oops at enqueue release GL objects: " + strconv.FormatInt(int64(st), 10))
-	}
-
-	return nil
+	).getError()
 }

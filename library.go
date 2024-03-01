@@ -23,6 +23,7 @@ var (
 	// Device
 	getDeviceIDs  func(platform Platform, deviceType DeviceType, numEntries uint32, devices []Device, numDevices *uint32) clStatus
 	getDeviceInfo func(device Device, deviceInfo deviceInfo, paramValueSize clSize, paramValue []byte, paramValueSizeRet *clSize) clStatus
+	releaseDevice func(id Device) clStatus
 	// Context
 	createContext           func(properties unsafe.Pointer, numDevices uint32, devices []Device, pfnNotify *createContextNotifyFunc, userData []byte, errCodeRet *clStatus) Context
 	releaseContext          func(ctx Context) clStatus
@@ -68,6 +69,7 @@ func Initialize() error {
 	// Device
 	purego.RegisterLibFunc(&getDeviceIDs, handle, "clGetDeviceIDs")
 	purego.RegisterLibFunc(&getDeviceInfo, handle, "clGetDeviceInfo")
+	purego.RegisterLibFunc(&releaseDevice, handle, "clReleaseDevice")
 	// Context
 	purego.RegisterLibFunc(&createContext, handle, "clCreateContext")
 	purego.RegisterLibFunc(&releaseContext, handle, "clReleaseContext")

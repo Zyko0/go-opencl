@@ -1,7 +1,6 @@
 package opencl
 
 import (
-	"errors"
 	"strings"
 	"unsafe"
 )
@@ -90,7 +89,7 @@ func (p Program) Build(device Device, opts *ProgramBuildOptions) (string, error)
 		p, 1, []Device{device}, opts.String(), nil, nil,
 	)
 	if st != CL_SUCCESS {
-		err = errors.New("oops at build program")
+		err = st.getError()
 	}
 
 	var logsSize clSize
@@ -98,7 +97,7 @@ func (p Program) Build(device Device, opts *ProgramBuildOptions) (string, error)
 		p, device, programBuildLog, 0, nil, &logsSize,
 	)
 	if st != CL_SUCCESS {
-		return "", errors.New("oops at 1st get program build info")
+		return "", st.getError()
 	}
 
 	var logs = make([]byte, logsSize)
@@ -106,7 +105,7 @@ func (p Program) Build(device Device, opts *ProgramBuildOptions) (string, error)
 		p, device, programBuildLog, logsSize, unsafe.Pointer(&logs[0]), nil,
 	)
 	if st != CL_SUCCESS {
-		return "", errors.New("oops at 2nd get program build info")
+		return "", st.getError()
 	}
 
 	return string(logs), err
@@ -114,20 +113,10 @@ func (p Program) Build(device Device, opts *ProgramBuildOptions) (string, error)
 
 func (p Program) CreateKernel(name string) (Kernel, error) {
 	var st clStatus
-
 	kernel := createKernel(p, name, &st)
-	if st != CL_SUCCESS {
-		return 0, errors.New("oops at create kernel")
-	}
-
-	return kernel, nil
+	return kernel, st.getError()
 }
 
 func (p Program) Release() error {
-	st := releaseProgram(p)
-	if st != CL_SUCCESS {
-		return errors.New("oops at release program")
-	}
-
-	return nil
+	return releaseProgram(p).getError()
 }
