@@ -74,7 +74,8 @@ func (cq CommandQueue) EnqueueReadImage(image Buffer, blockingRead bool, data *I
 }
 
 func (cq CommandQueue) EnqueueWriteBuffer(buffer Buffer, blockingWrite bool, data *BufferData) error {
-	st := enqueueReadBuffer(
+	// Fix: Read -> Write
+	st := enqueueWriteBuffer(
 		cq, buffer, blockingWrite, 0, clSize(data.DataSize), data.Pointer, 0, nil, nil,
 	)
 	if st != CL_SUCCESS {
