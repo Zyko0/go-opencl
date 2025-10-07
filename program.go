@@ -53,6 +53,16 @@ func (po *ProgramBuildOptions) String() string {
 		sb.WriteString("-w")
 		sb.WriteRune(' ')
 	}
+	// Macros -D Flags
+	for name, value := range po.Macros {
+		sb.WriteString("-D ")
+		sb.WriteString(name)
+		if value != "" && value != "1" {
+			sb.WriteRune('=')
+			sb.WriteString(value)
+		}
+		sb.WriteRune(' ')
+	}
 	if po.Version != "" {
 		sb.WriteString("-cl-std=" + string(po.Version))
 		sb.WriteRune(' ')
